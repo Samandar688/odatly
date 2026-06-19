@@ -5,7 +5,6 @@ import { isSupabaseConfigured, mapProfile, type Profile, supabase } from '../lib
 interface AuthResult {
   ok: boolean;
   message?: string;
-  needsEmailConfirmation?: boolean;
 }
 
 interface AuthStoreValue {
@@ -14,24 +13,23 @@ interface AuthStoreValue {
   loading: boolean;
   authError: string;
   isRemoteAuth: boolean;
-  signUp: (input: { fullName: string; email: string; password: string }) => Promise<AuthResult>;
-  signIn: (input: { email: string; password: string }) => Promise<AuthResult>;
+  enterWithName: (fullName: string) => Promise<AuthResult>;
   signOut: () => Promise<void>;
   clearAuthError: () => void;
 }
 
-const LOCAL_AUTH_KEY = 'odatly.local.auth.v1';
+const LOCAL_AUTH_KEY = 'odatly.local.auth.v2';
 
 const AuthContext = createContext<AuthStoreValue | null>(null);
 
-function createLocalUser(email: string, fullName = ''): User {
+function createLocalUser(fullName: string): User {
   return {
-    id: 'local-user',
+    id: `local-${fullName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'user'}`,
     app_metadata: {},
     user_metadata: { full_name: fullName },
     aud: 'authenticated',
     created_at: new Date().toISOString(),
-    email,
+    email: '',
   } as User;
 }
 
@@ -42,13 +40,14 @@ function readLocalAuth() {
   if (!raw) return null;
 
   try {
-    const parsed = JSON.parse(raw) as { email: string; fullName: string };
-    if (!parsed.email) return null;
+    const parsed = JSON.parse(raw) as { fullName: string };
+    if (!parsed.fullName) return null;
+    const user = createLocalUser(parsed.fullName);
     return {
-      user: createLocalUser(parsed.email, parsed.fullName),
+      user,
       profile: {
-        id: 'local-user',
-        email: parsed.email,
+        id: user.id,
+        email: '',
         fullName: parsed.fullName,
       },
     };
@@ -165,72 +164,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loading,
     authError,
     isRemoteAuth: isSupabaseConfigured,
-    async signUp(input) {
+    async enterWithName(fullName) {
       setLoading(true);
       setAuthError('');
 
       try {
+        const trimmedName = fullName.trim();
+        if (!trimmedName) {
+          throw new Error('Ismingizni kiriting.');
+        }
+
         if (!supabase) {
-          const localUser = createLocalUser(input.email, input.fullName);
-          const localProfile = { id: localUser.id, email: input.email, fullName: input.fullName };
+          const localUser = createLocalUser(trimmedName);
+          const localProfile = { id: localUser.id, email: '', fullName: trimmedName };
           window.localStorage.setItem(LOCAL_AUTH_KEY, JSON.stringify(localProfile));
           setUser(localUser);
           setProfile(localProfile);
           return { ok: true };
         }
 
-        const { data, error } = await supabase.auth.signUp({
-          email: input.email,
-          password: input.password,
+        const { data, error } = await supabase.auth.signInAnonymously({
           options: {
             data: {
-              full_name: input.fullName,
+              full_name: trimmedName,
             },
           },
         });
 
         if (error) throw error;
 
-        if (!data.session) {
-          return {
-            ok: true,
-            needsEmailConfirmation: true,
-            message: 'Email tasdiqlash yoqilgan. Pochtangizni tasdiqlab, keyin login qiling.',
-          };
+        if (data.user) {
+          const currentProfile = await fetchProfile(data.user);
+          setUser(data.user);
+          setProfile(currentProfile);
         }
 
         return { ok: true };
       } catch (error) {
-        const message = error instanceof Error ? error.message : 'Ro‘yxatdan o‘tib bo‘lmadi.';
-        setAuthError(message);
-        return { ok: false, message };
-      } finally {
-        setLoading(false);
-      }
-    },
-    async signIn(input) {
-      setLoading(true);
-      setAuthError('');
-
-      try {
-        if (!supabase) {
-          const localUser = createLocalUser(input.email, input.email.split('@')[0]);
-          const localProfile = { id: localUser.id, email: input.email, fullName: input.email.split('@')[0] };
-          window.localStorage.setItem(LOCAL_AUTH_KEY, JSON.stringify(localProfile));
-          setUser(localUser);
-          setProfile(localProfile);
-          return { ok: true };
-        }
-
-        const { error } = await supabase.auth.signInWithPassword({
-          email: input.email,
-          password: input.password,
-        });
-
-        if (error) throw error;
-        return { ok: true };
-      } catch (error) {
-        const message = error instanceof Error ? error.message : 'Email yoki parol noto‘g‘ri.';
+        const message = error instanceof Error ? error.message : 'Kirish amalga oshmadi.';
         setAuthError(message);
         return { ok: false, message };
       } finally {

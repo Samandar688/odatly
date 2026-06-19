@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Bell, Clock, AlignLeft } from 'lucide-react';
-import { StatusBar, PrimaryButton, SecondaryButton, CategoryChip, DayChip, InputField, C } from './shared';
+import { PrimaryButton, SecondaryButton, CategoryChip, DayChip, InputField, C } from './shared';
 import type { DayLabel, NewHabitInput } from '../domain/habits';
 
 const DAYS: DayLabel[] = ['Du', 'Se', 'Cho', 'Pa', 'Ju', 'Sha', 'Yak'];
@@ -60,12 +60,15 @@ export function AddHabitScreen({
 
   return (
     <div style={{ position: 'absolute', inset: 0, background: C.bg, display: 'flex', flexDirection: 'column' }}>
-      <StatusBar />
-
       {/* Header */}
       <div style={{
-        background: C.bg, padding: '14px 20px 12px', display: 'flex', alignItems: 'center', gap: 12,
-        marginTop: 44, flexShrink: 0, borderBottom: `1px solid ${C.border}`,
+        background: C.bg,
+        padding: 'calc(14px + env(safe-area-inset-top, 0px)) 20px 12px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 12,
+        flexShrink: 0,
+        borderBottom: `1px solid ${C.border}`,
       }}>
         <button onClick={onBack} style={{
           width: 36, height: 36, borderRadius: 10, border: 'none', background: C.card,
@@ -80,7 +83,7 @@ export function AddHabitScreen({
       </div>
 
       {/* Scrollable form */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 32px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px calc(32px + env(safe-area-inset-bottom, 0px))' }}>
         {/* Preview card */}
         <div style={{
           background: `${color}15`, borderRadius: 18, padding: '16px',

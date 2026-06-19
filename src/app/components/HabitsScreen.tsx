@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Plus, Bell, ToggleLeft, ToggleRight } from 'lucide-react';
-import { CategoryChip, PrimaryButton, C, ScreenScroll, StatusBar, EmptyState, type HabitDailyView } from './shared';
+import { CategoryChip, PrimaryButton, C, ScreenScroll, EmptyState, type HabitDailyView } from './shared';
 import { useHabitStore } from '../state/habitStore';
 import { toHabitDailyView } from '../domain/habits';
 
@@ -37,7 +37,9 @@ function HabitListCard({
             }}>{habit.category}</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: 4, color: C.grayMed }}>
               <Bell size={12} />
-              <span style={{ fontSize: 12, color: C.grayMed, fontFamily: 'Plus Jakarta Sans, sans-serif' }}>{habit.reminderTime}</span>
+              <span style={{ fontSize: 12, color: C.grayMed, fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+                {habit.reminderTime || "Eslatma yo'q"}
+              </span>
             </div>
             <span style={{ fontSize: 12, color: C.grayMed, fontFamily: 'Plus Jakarta Sans, sans-serif' }}>• {habit.target}</span>
           </div>
@@ -79,10 +81,15 @@ export function HabitsScreen({
 
   return (
     <div style={{ position: 'absolute', inset: 0, background: C.bg }}>
-      <StatusBar />
-      <ScreenScroll top={44} bottom={80} paddingBottom={32}>
+      <ScreenScroll bottom={80} paddingBottom={32}>
         {/* Header */}
-        <div style={{ background: C.bg, padding: '16px 20px 0', position: 'sticky', top: 0, zIndex: 10 }}>
+        <div style={{
+          background: C.bg,
+          padding: 'calc(16px + env(safe-area-inset-top, 0px)) 20px 0',
+          position: 'sticky',
+          top: 0,
+          zIndex: 10,
+        }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
             <div>
               <div style={{ fontSize: 22, fontWeight: 800, color: C.charcoal, fontFamily: 'Plus Jakarta Sans, sans-serif' }}>Odatlarim</div>

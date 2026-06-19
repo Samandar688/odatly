@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { StatusBar, PrimaryButton, SecondaryButton, C } from './shared';
+import { PrimaryButton, SecondaryButton, C } from './shared';
 
 const slides = [
   {
@@ -35,11 +35,9 @@ export function OnboardingScreen({
 
   return (
     <div style={{ position: 'absolute', inset: 0, background: slide.bg, transition: 'background 0.5s', display: 'flex', flexDirection: 'column' }}>
-      <StatusBar />
-
       {/* Skip button */}
       {page < 2 && (
-        <div style={{ position: 'absolute', top: 52, right: 20 }}>
+        <div style={{ position: 'absolute', top: 'calc(16px + env(safe-area-inset-top, 0px))', right: 20 }}>
           <button onClick={() => setPage(2)} style={{
             background: 'none', border: 'none', cursor: 'pointer',
             fontSize: 14, fontWeight: 600, color: C.grayMed, fontFamily: 'Plus Jakarta Sans, sans-serif',
@@ -50,7 +48,7 @@ export function OnboardingScreen({
       {/* Illustration area */}
       <div style={{
         flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-        padding: '60px 32px 0',
+        padding: 'calc(44px + env(safe-area-inset-top, 0px)) 32px 0',
       }}>
         {/* Big icon card */}
         <div style={{
@@ -78,7 +76,7 @@ export function OnboardingScreen({
       </div>
 
       {/* Bottom section */}
-      <div style={{ padding: '24px 28px 40px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div style={{ padding: '24px 28px calc(40px + env(safe-area-inset-bottom, 0px))', display: 'flex', flexDirection: 'column', gap: 12 }}>
         {/* Dots */}
         <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 8 }}>
           {slides.map((_, i) => (

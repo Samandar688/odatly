@@ -7,7 +7,6 @@ import {
   createId,
   dateKey,
 } from '../domain/habits';
-import { createSeedData } from '../data/seed';
 import { mapHabit, mapHabitLog, supabase, type HabitLogRow, type HabitRow } from '../lib/supabase';
 import { useAuth } from './authStore';
 
@@ -33,40 +32,45 @@ interface HabitStoreValue extends HabitState {
   toggleHabitActive: (habitId: string) => Promise<void>;
   upsertHabitLog: (input: UpsertLogInput) => Promise<HabitLog>;
   refresh: () => Promise<void>;
-  resetDemoData: () => void;
+  clearLocalData: () => void;
   clearStoreError: () => void;
 }
 
-const STORAGE_KEY = 'odatly.local.mvp.v1';
+const EMPTY_STATE: HabitState = { habits: [], logs: [] };
+const STORAGE_PREFIX = 'odatly.local.habits.v2';
 
 const HabitStoreContext = createContext<HabitStoreValue | null>(null);
 
-function loadInitialState(): HabitState {
-  if (typeof window === 'undefined') return createSeedData();
+function storageKey(userId: string) {
+  return `${STORAGE_PREFIX}.${userId}`;
+}
 
-  const raw = window.localStorage.getItem(STORAGE_KEY);
-  if (!raw) return createSeedData();
+function loadInitialState(userId?: string): HabitState {
+  if (typeof window === 'undefined' || !userId) return EMPTY_STATE;
+
+  const raw = window.localStorage.getItem(storageKey(userId));
+  if (!raw) return EMPTY_STATE;
 
   try {
     const parsed = JSON.parse(raw) as HabitState;
     if (!Array.isArray(parsed.habits) || !Array.isArray(parsed.logs)) {
-      return createSeedData();
+      return EMPTY_STATE;
     }
     return parsed;
   } catch {
-    return createSeedData();
+    return EMPTY_STATE;
   }
 }
 
-function saveLocalState(state: HabitState) {
-  if (!supabase) {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+function saveLocalState(state: HabitState, userId?: string) {
+  if (!supabase && userId) {
+    window.localStorage.setItem(storageKey(userId), JSON.stringify(state));
   }
 }
 
 export function HabitProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
-  const [state, setState] = useState<HabitState>(() => (supabase ? { habits: [], logs: [] } : loadInitialState()));
+  const [state, setState] = useState<HabitState>(EMPTY_STATE);
   const [loading, setLoading] = useState(false);
   const [storeError, setStoreError] = useState('');
 
@@ -110,12 +114,15 @@ export function HabitProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (supabase) {
       void loadRemoteData();
+      return;
     }
+
+    setState(loadInitialState(user?.id));
   }, [user?.id]);
 
   useEffect(() => {
-    saveLocalState(state);
-  }, [state]);
+    saveLocalState(state, user?.id);
+  }, [state, user?.id]);
 
   const value = useMemo<HabitStoreValue>(() => ({
     ...state,
@@ -277,9 +284,10 @@ export function HabitProvider({ children }: { children: React.ReactNode }) {
     async refresh() {
       await loadRemoteData();
     },
-    resetDemoData() {
+    clearLocalData() {
       if (supabase) return;
-      setState(createSeedData());
+      if (user?.id) window.localStorage.removeItem(storageKey(user.id));
+      setState(EMPTY_STATE);
     },
     clearStoreError() {
       setStoreError('');

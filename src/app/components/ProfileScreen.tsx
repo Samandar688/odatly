@@ -1,5 +1,5 @@
 import { ChevronRight, Globe, Moon, Bell, Settings, LogOut, User, Award } from 'lucide-react';
-import { ProgressRing, C, ScreenScroll, StatusBar } from './shared';
+import { ProgressRing, C, ScreenScroll } from './shared';
 import { useAuth } from '../state/authStore';
 import { useHabitStore } from '../state/habitStore';
 import { getCurrentStreak, getRangeStats, startOfMonth } from '../domain/habits';
@@ -57,10 +57,9 @@ export function ProfileScreen({ onLogout }: { onLogout: () => void }) {
 
   return (
     <div style={{ position: 'absolute', inset: 0, background: C.bg }}>
-      <StatusBar />
-      <ScreenScroll top={44} bottom={80} paddingBottom={32}>
+      <ScreenScroll bottom={80} paddingBottom={32}>
         {/* Header */}
-        <div style={{ padding: '16px 20px 0' }}>
+        <div style={{ padding: 'calc(16px + env(safe-area-inset-top, 0px)) 20px 0' }}>
           <div style={{ fontSize: 22, fontWeight: 800, color: C.charcoal, fontFamily: 'Plus Jakarta Sans, sans-serif' }}>Profil</div>
         </div>
 
@@ -114,7 +113,7 @@ export function ProfileScreen({ onLogout }: { onLogout: () => void }) {
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div style={{ fontSize: 14, fontWeight: 700, color: C.charcoal, fontFamily: 'Plus Jakarta Sans, sans-serif' }}>Silver daraja</div>
                   <span style={{ fontSize: 12, fontWeight: 600, color: C.primary, background: C.primaryLight, padding: '2px 8px', borderRadius: 20, fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
-                    {isRemoteAuth ? 'Supabase' : 'Local demo'}
+                    {isRemoteAuth ? 'Cloud sync' : 'Lokal saqlash'}
                   </span>
                 </div>
                 <div style={{ fontSize: 12, color: C.grayMed, marginTop: 4, marginBottom: 10, fontFamily: 'Plus Jakarta Sans, sans-serif' }}>Bu oy bajarilish darajasi</div>

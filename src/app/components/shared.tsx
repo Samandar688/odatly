@@ -24,38 +24,6 @@ export type { Habit, HabitDailyView };
 
 // ─── Status Bar ───────────────────────────────────────────────────────────────
 
-export function StatusBar({ light = false }: { light?: boolean }) {
-  const textColor = light ? '#fff' : C.charcoal;
-  return (
-    <div style={{
-      position: 'absolute', top: 0, left: 0, right: 0, height: 44,
-      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      padding: '0 22px', zIndex: 100,
-    }}>
-      <span style={{ fontSize: 15, fontWeight: 600, color: textColor }}>9:41</span>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-        <svg width="17" height="12" viewBox="0 0 17 12" fill="none">
-          <rect x="0" y="8" width="3" height="4" rx="1" fill={textColor} />
-          <rect x="4.5" y="5" width="3" height="7" rx="1" fill={textColor} />
-          <rect x="9" y="2" width="3" height="10" rx="1" fill={textColor} />
-          <rect x="13.5" y="0" width="3" height="12" rx="1" fill={textColor} opacity={0.35} />
-        </svg>
-        <svg width="16" height="11" viewBox="0 0 16 11" fill="none">
-          <path d="M8 7.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z" fill={textColor} />
-          <path d="M4.5 5.5C5.7 4.3 6.8 3.7 8 3.7s2.3.6 3.5 1.8" stroke={textColor} strokeWidth="1.5" strokeLinecap="round" fill="none" />
-          <path d="M1.5 2.5C3.5.5 5.6 0 8 0s4.5.5 6.5 2.5" stroke={textColor} strokeWidth="1.5" strokeLinecap="round" opacity={0.4} fill="none" />
-        </svg>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <div style={{ width: 25, height: 12, borderRadius: 3, border: `1.5px solid ${textColor}`, padding: 1.5, display: 'flex', alignItems: 'center' }}>
-            <div style={{ width: '80%', height: '100%', background: textColor, borderRadius: 1 }} />
-          </div>
-          <div style={{ width: 2, height: 5, background: textColor, borderRadius: '0 1px 1px 0', opacity: 0.4 }} />
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // ─── Progress Ring ─────────────────────────────────────────────────────────────
 
 export function ProgressRing({
@@ -177,19 +145,25 @@ export function HabitCard({
 }) {
   const statusText = habit.todayStatus === 'missed'
     ? 'Bajarilmadi'
-    : habit.completed
-      ? 'Bajarildi ✓'
-      : 'Kutilmoqda';
+    : habit.todayStatus === 'skipped'
+      ? "O'tkazildi"
+      : habit.completed
+        ? 'Bajarildi'
+        : 'Kutilmoqda';
   const statusColor = habit.todayStatus === 'missed'
     ? C.redMed
-    : habit.completed
-      ? C.primary
-      : C.grayMed;
+    : habit.todayStatus === 'skipped'
+      ? C.orange
+      : habit.completed
+        ? C.primary
+        : C.grayMed;
   const statusBg = habit.todayStatus === 'missed'
     ? C.redSoft
-    : habit.completed
-      ? C.primaryLight
-      : '#F0F0F5';
+    : habit.todayStatus === 'skipped'
+      ? C.orangeLight
+      : habit.completed
+        ? C.primaryLight
+        : '#F0F0F5';
 
   return (
     <div onClick={onPress} style={{
@@ -362,13 +336,17 @@ export function BottomSheet({
 // ─── Screen Scroll Container ────────────────────────────────────────────────────
 
 export function ScreenScroll({
-  children, top = 44, bottom = 0, paddingBottom = 24,
+  children, top = 0, bottom = 0, paddingBottom = 24,
 }: {
-  children: React.ReactNode; top?: number; bottom?: number; paddingBottom?: number;
+  children: React.ReactNode; top?: number | string; bottom?: number | string; paddingBottom?: number | string;
 }) {
+  const bottomValue = typeof bottom === 'number'
+    ? `calc(${bottom}px + env(safe-area-inset-bottom, 0px))`
+    : bottom;
+
   return (
     <div style={{
-      position: 'absolute', top, bottom, left: 0, right: 0,
+      position: 'absolute', top, bottom: bottomValue, left: 0, right: 0,
       overflowY: 'auto', overscrollBehavior: 'contain',
       WebkitOverflowScrolling: 'touch',
     }}>

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { C, ScreenScroll, StatusBar } from './shared';
+import { C, ScreenScroll } from './shared';
 import { useHabitStore } from '../state/habitStore';
 import {
   DAY_LABELS,
@@ -54,9 +54,8 @@ export function CalendarScreen() {
 
   return (
     <div style={{ position: 'absolute', inset: 0, background: C.bg }}>
-      <StatusBar />
-      <ScreenScroll top={44} bottom={80} paddingBottom={32}>
-        <div style={{ padding: '16px 20px 0' }}>
+      <ScreenScroll bottom={80} paddingBottom={32}>
+        <div style={{ padding: 'calc(16px + env(safe-area-inset-top, 0px)) 20px 0' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
             <div style={{ fontSize: 22, fontWeight: 800, color: C.charcoal, fontFamily: 'Plus Jakarta Sans, sans-serif' }}>Kalendar</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -70,7 +69,8 @@ export function CalendarScreen() {
             </div>
           </div>
           <div style={{ fontSize: 13, color: C.grayMed, fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
-            {monthStats.done} bajarildi • {monthStats.missed} bajarilmadi • {monthStats.pending} kutilmoqda
+            {monthStats.done} bajarildi • {monthStats.missed} bajarilmadi
+            {monthStats.skipped > 0 ? ` • ${monthStats.skipped} o'tkazildi` : ''} • {monthStats.pending} kutilmoqda
           </div>
         </div>
 
@@ -164,11 +164,11 @@ export function CalendarScreen() {
                     <span style={{ flex: 1, fontSize: 13, fontWeight: 500, color: C.charcoal, fontFamily: 'Plus Jakarta Sans, sans-serif' }}>{h.name}</span>
                     <span style={{
                       fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 20,
-                      background: h.status === 'done' ? C.primaryLight : h.status === 'missed' ? '#FFE8E8' : '#F0F0F5',
-                      color: h.status === 'done' ? C.primary : h.status === 'missed' ? '#F87171' : C.grayMed,
+                      background: h.status === 'done' ? C.primaryLight : h.status === 'missed' ? '#FFE8E8' : h.status === 'skipped' ? C.orangeLight : '#F0F0F5',
+                      color: h.status === 'done' ? C.primary : h.status === 'missed' ? '#F87171' : h.status === 'skipped' ? C.orange : C.grayMed,
                       fontFamily: 'Plus Jakarta Sans, sans-serif',
                     }}>
-                      {h.status === 'done' ? '✓ Bajarildi' : h.status === 'missed' ? '✗ Bajarilmadi' : 'Kutilmoqda'}
+                      {h.status === 'done' ? '✓ Bajarildi' : h.status === 'missed' ? '✗ Bajarilmadi' : h.status === 'skipped' ? "O'tkazildi" : 'Kutilmoqda'}
                     </span>
                   </div>
                 ))}

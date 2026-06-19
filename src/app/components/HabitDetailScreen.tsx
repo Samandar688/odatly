@@ -1,5 +1,4 @@
-import { Edit2 } from 'lucide-react';
-import { StatusBar, ProgressRing, PrimaryButton, C, ScreenScroll, EmptyState } from './shared';
+import { ProgressRing, PrimaryButton, C, ScreenScroll, EmptyState } from './shared';
 import { useHabitStore } from '../state/habitStore';
 import {
   formatDuration,
@@ -26,8 +25,7 @@ export function HabitDetailScreen({
   if (!baseHabit) {
     return (
       <div style={{ position: 'absolute', inset: 0, background: C.bg }}>
-        <StatusBar />
-        <ScreenScroll top={44} paddingBottom={32}>
+        <ScreenScroll paddingBottom={32}>
           <EmptyState icon="🌱" title="Odat topilmadi" description="Ro‘yxatdan odat tanlang yoki yangi odat qo‘shing." />
         </ScreenScroll>
       </div>
@@ -42,12 +40,10 @@ export function HabitDetailScreen({
 
   return (
     <div style={{ position: 'absolute', inset: 0, background: C.bg }}>
-      <StatusBar />
-
-      <ScreenScroll top={44} paddingBottom={32}>
+      <ScreenScroll paddingBottom={32}>
         <div style={{
           background: `linear-gradient(145deg, ${habit.color}CC, ${habit.color})`,
-          padding: '14px 20px 28px', position: 'relative', overflow: 'hidden',
+          padding: 'calc(14px + env(safe-area-inset-top, 0px)) 20px 28px', position: 'relative', overflow: 'hidden',
         }}>
           <button onClick={onBack} style={{
             width: 36, height: 36, borderRadius: 10, border: 'none',
@@ -110,12 +106,13 @@ export function HabitDetailScreen({
                 <div key={w.day} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flex: 1 }}>
                   <div style={{
                     width: '100%', height: 32, borderRadius: 6,
-                    background: w.status === 'done' ? habit.color : w.status === 'missed' ? C.redSoft : C.primaryLight,
+                    background: w.status === 'done' ? habit.color : w.status === 'missed' ? C.redSoft : w.status === 'skipped' ? C.orangeLight : C.primaryLight,
                     maxWidth: 36,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}>
                     {w.status === 'done' && <span style={{ fontSize: 12, color: '#fff' }}>✓</span>}
                     {w.status === 'missed' && <span style={{ fontSize: 12, color: C.redMed }}>×</span>}
+                    {w.status === 'skipped' && <span style={{ fontSize: 12, color: C.orange }}>-</span>}
                   </div>
                   <span style={{ fontSize: 10, color: C.grayMed, fontFamily: 'Plus Jakarta Sans, sans-serif' }}>{w.day}</span>
                 </div>
@@ -133,22 +130,22 @@ export function HabitDetailScreen({
                 }}>
                   <div style={{
                     width: 10, height: 10, borderRadius: '50%', flexShrink: 0,
-                    background: log.status === 'done' ? habit.color : C.redMed,
-                    boxShadow: `0 0 0 3px ${log.status === 'done' ? habit.color + '25' : C.redMed + '25'}`,
+                    background: log.status === 'done' ? habit.color : log.status === 'skipped' ? C.orange : C.redMed,
+                    boxShadow: `0 0 0 3px ${log.status === 'done' ? habit.color + '25' : log.status === 'skipped' ? C.orange + '25' : C.redMed + '25'}`,
                   }} />
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 13, fontWeight: 600, color: C.charcoal, fontFamily: 'Plus Jakarta Sans, sans-serif' }}>{formatShortDate(log.date)}</div>
                     <div style={{ fontSize: 12, color: C.grayMed, fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
-                      {log.status === 'done' ? `${formatDuration(log.durationMinutes)}${log.mood ? ` • ${log.mood}` : ''}` : 'Bajarilmadi'}
+                      {log.status === 'done' ? `${formatDuration(log.durationMinutes)}${log.mood ? ` • ${log.mood}` : ''}` : log.status === 'skipped' ? "O'tkazildi" : 'Bajarilmadi'}
                     </div>
                   </div>
                   <span style={{
                     fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 20,
-                    background: log.status === 'done' ? C.primaryLight : C.redSoft,
-                    color: log.status === 'done' ? C.primary : C.redMed,
+                    background: log.status === 'done' ? C.primaryLight : log.status === 'skipped' ? C.orangeLight : C.redSoft,
+                    color: log.status === 'done' ? C.primary : log.status === 'skipped' ? C.orange : C.redMed,
                     fontFamily: 'Plus Jakarta Sans, sans-serif',
                   }}>
-                    {log.status === 'done' ? '✓' : '✗'}
+                    {log.status === 'done' ? '✓' : log.status === 'skipped' ? '-' : '✗'}
                   </span>
                 </div>
               ))}
@@ -160,15 +157,7 @@ export function HabitDetailScreen({
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: 10 }}>
-            <PrimaryButton onClick={() => onCheckIn(habit.id)} fullWidth>Bugun belgilash</PrimaryButton>
-            <button style={{
-              width: 52, height: 52, borderRadius: 14, border: `1.5px solid ${C.border}`,
-              background: C.card, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-            }}>
-              <Edit2 size={20} color={C.charcoal} />
-            </button>
-          </div>
+          <PrimaryButton onClick={() => onCheckIn(habit.id)} fullWidth>Bugun belgilash</PrimaryButton>
         </div>
       </ScreenScroll>
     </div>

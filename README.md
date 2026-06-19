@@ -1,6 +1,6 @@
 # Odatly Habit Tracking App
 
-Odatly MVP uchun Vite + React prototip. Figma eksporti asosida boshlanib, hozir local-first habit tracking logikasi bilan ishlaydi.
+Odatly MVP uchun Vite + React + Capacitor habit tracker. App ism bilan kiradi, odatlarni bo'sh holatdan boshlaydi va foydalanuvchi qo'shgan real data asosida ishlaydi.
 
 ## Ishga tushirish
 
@@ -44,11 +44,11 @@ Odatly-debug.apk
 
 - Habit qo‘shish va faollashtirish/faolsizlantirish.
 - Bugungi planned habitlarni chiqarish.
-- Check-in: `done` yoki `missed`, duration, note va mood.
+- Check-in: `done`, `missed` yoki `skipped`, duration, note va mood.
 - Bir habit uchun bir kunda bitta log: mavjud bo‘lsa yangilanadi.
 - Haftalik/oylik/umumiy statistika, duration va streak hisoblash.
 - Calendar va habit detail ekranlari real local loglardan ishlaydi.
-- `.env` sozlansa Supabase auth/database bilan ishlaydi, aks holda demo/local rejimda ishlaydi.
+- `.env` sozlansa Supabase auth/database bilan ishlaydi, aks holda data lokal qurilmada saqlanadi.
 
 ## Supabase sozlash
 
@@ -75,7 +75,7 @@ npm run cap:sync
 npm run android:build
 ```
 
-Supabase’da email confirmation yoqilgan bo‘lsa, ro‘yxatdan o‘tgandan keyin email tasdiqlash kerak bo‘ladi. Tez MVP test uchun Supabase Auth settings ichida email confirmationni vaqtincha o‘chirib qo‘yish mumkin.
+Ism bilan kirish Supabase’da anonymous auth orqali ishlaydi. Supabase Auth settings ichida anonymous sign-ins yoqilgan bo‘lishi kerak.
 
 ## Keyingi katta bosqich
 

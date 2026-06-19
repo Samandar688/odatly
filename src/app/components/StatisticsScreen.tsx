@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, Tooltip } from 'recharts';
 import { TrendingUp, Flame, Target, Clock } from 'lucide-react';
-import { StatCard, ProgressRing, C, ScreenScroll, StatusBar } from './shared';
+import { StatCard, ProgressRing, C, ScreenScroll } from './shared';
 import { useHabitStore } from '../state/habitStore';
 import {
   formatDuration,
@@ -51,9 +51,8 @@ export function StatisticsScreen() {
 
   return (
     <div style={{ position: 'absolute', inset: 0, background: C.bg }}>
-      <StatusBar />
-      <ScreenScroll top={44} bottom={80} paddingBottom={32}>
-        <div style={{ padding: '16px 20px 0' }}>
+      <ScreenScroll bottom={80} paddingBottom={32}>
+        <div style={{ padding: 'calc(16px + env(safe-area-inset-top, 0px)) 20px 0' }}>
           <div style={{ fontSize: 22, fontWeight: 800, color: C.charcoal, fontFamily: 'Plus Jakarta Sans, sans-serif', marginBottom: 4 }}>Statistika</div>
           <div style={{ fontSize: 13, color: C.grayMed, fontFamily: 'Plus Jakarta Sans, sans-serif' }}>Odatlar bo‘yicha real natijalar</div>
         </div>

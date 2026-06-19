@@ -1,5 +1,6 @@
 import { Plus } from 'lucide-react';
-import { StatusBar, ProgressRing, HabitCard, C, ScreenScroll, EmptyState } from './shared';
+import { ProgressRing, HabitCard, C, ScreenScroll, EmptyState } from './shared';
+import { useAuth } from '../state/authStore';
 import { useHabitStore } from '../state/habitStore';
 import {
   formatShortDate,
@@ -15,8 +16,10 @@ export function HomeScreen({
   onHabitDetail: (id: string) => void;
   onAddHabit: () => void;
 }) {
+  const { profile, user } = useAuth();
   const { habits, logs } = useHabitStore();
   const today = new Date();
+  const firstName = (profile?.fullName || user?.email?.split('@')[0] || "do'stim").split(' ')[0];
   const todayHabits = getPlannedHabits(habits, today).map((habit) => toHabitDailyView(habit, logs, today));
   const summary = getCompletionSummary(habits, logs, today);
   const completed = summary.done;
@@ -26,21 +29,21 @@ export function HomeScreen({
 
   return (
     <div style={{ position: 'absolute', inset: 0, background: C.bg }}>
-      <StatusBar light />
-
-      <ScreenScroll top={44} bottom={80} paddingBottom={100}>
+      <ScreenScroll bottom={80} paddingBottom={100}>
         {/* Hero greeting card */}
         <div style={{
           margin: '0 0 0 0',
           background: `linear-gradient(145deg, #2D9162 0%, ${C.primary} 60%, #5CC896 100%)`,
-          padding: '24px 24px 28px',
+          padding: 'calc(24px + env(safe-area-inset-top, 0px)) 24px 28px',
           position: 'relative', overflow: 'hidden',
         }}>
           <div style={{ position: 'absolute', top: -30, right: -30, width: 140, height: 140, borderRadius: '50%', background: 'rgba(255,255,255,0.09)' }} />
           <div style={{ position: 'absolute', bottom: -20, right: 60, width: 80, height: 80, borderRadius: '50%', background: 'rgba(255,255,255,0.07)' }} />
 
           <div style={{ marginBottom: 2, fontSize: 13, color: 'rgba(255,255,255,0.75)', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>Bugun, {formatShortDate(today)}</div>
-          <div style={{ fontSize: 22, fontWeight: 700, color: '#fff', fontFamily: 'Plus Jakarta Sans, sans-serif', marginBottom: 4 }}>Salom, Azizjon 👋</div>
+          <div style={{ fontSize: 22, fontWeight: 700, color: '#fff', fontFamily: 'Plus Jakarta Sans, sans-serif', marginBottom: 4 }}>
+            Salom, {firstName}
+          </div>
           <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.82)', fontFamily: 'Plus Jakarta Sans, sans-serif', lineHeight: 1.5 }}>
             Bugun kichik qadam — ertaga katta natija.
           </div>

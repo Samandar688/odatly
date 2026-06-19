@@ -1,0 +1,29 @@
+{
+  "expo": {
+    "name": "Odatly",
+    "slug": "odatly",
+    "owner": "samandar0709",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "odatly",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "uz.odatly.app",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "backgroundColor": "#EEF8EE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    }
+  }
+}

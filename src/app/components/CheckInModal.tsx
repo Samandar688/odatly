@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Clock, FileText } from 'lucide-react';
 import { BottomSheet, PrimaryButton, InputField, C } from './shared';
-import { getLogForDate, parseDurationMinutes } from '../domain/habits';
+import { getLogForDate, parseDurationMinutes, type HabitLogStatus } from '../domain/habits';
 import { useHabitStore } from '../state/habitStore';
 
 const MOODS = [
@@ -18,7 +18,7 @@ export function CheckInModal({
 }) {
   const { habits, logs, upsertHabitLog } = useHabitStore();
   const habit = habits.find(h => h.id === habitId);
-  const [done, setDone] = useState<boolean | null>(null);
+  const [status, setStatus] = useState<HabitLogStatus | null>(null);
   const [duration, setDuration] = useState('');
   const [note, setNote] = useState('');
   const [mood, setMood] = useState('');
@@ -29,27 +29,27 @@ export function CheckInModal({
     if (!isOpen || !habit) return;
 
     const todayLog = getLogForDate(logs, habit.id, new Date());
-    setDone(todayLog ? todayLog.status === 'done' : null);
+    setStatus(todayLog?.status ?? null);
     setDuration(todayLog?.durationMinutes ? String(todayLog.durationMinutes) : '');
     setNote(todayLog?.note ?? '');
     setMood(todayLog?.mood ?? '');
   }, [habit, isOpen, logs]);
 
   const handleSave = async () => {
-    if (!habit || done === null) return;
+    if (!habit || status === null) return;
 
     setSaving(true);
     setLocalError('');
     try {
       await upsertHabitLog({
         habitId: habit.id,
-        status: done ? 'done' : 'missed',
-        durationMinutes: done ? parseDurationMinutes(duration) : 0,
+        status,
+        durationMinutes: status === 'done' ? parseDurationMinutes(duration) : 0,
         note: note.trim(),
         mood,
       });
 
-      setDone(null);
+      setStatus(null);
       setDuration('');
       setNote('');
       setMood('');
@@ -65,7 +65,7 @@ export function CheckInModal({
 
   return (
     <BottomSheet isOpen={isOpen} onClose={onClose}>
-      <div style={{ padding: '8px 20px 32px' }}>
+      <div style={{ padding: '8px 20px calc(32px + env(safe-area-inset-bottom, 0px))' }}>
         {/* Habit info */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20, paddingBottom: 16, borderBottom: `1px solid ${C.border}` }}>
           <div style={{
@@ -82,28 +82,29 @@ export function CheckInModal({
 
         {/* Question */}
         <div style={{ fontSize: 15, fontWeight: 700, color: C.charcoal, fontFamily: 'Plus Jakarta Sans, sans-serif', marginBottom: 12 }}>
-          Bugun bajardingizmi?
+          Bugun odat holati qanday?
         </div>
 
-        {/* Yes / No */}
+        {/* Status */}
         <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
           {[
-            { label: 'Ha, bajardim', value: true, color: C.primary, bg: C.primaryLight, emoji: '✅' },
-            { label: "Yo'q, bajarmadim", value: false, color: '#F87171', bg: '#FFE8E8', emoji: '❌' },
+            { label: 'Bajardim', value: 'done' as const, color: C.primary, mark: '✓' },
+            { label: 'Bajarmadim', value: 'missed' as const, color: '#F87171', mark: '×' },
+            { label: "O'tkazdim", value: 'skipped' as const, color: C.orange, mark: '-' },
           ].map(opt => (
-            <button key={String(opt.value)} onClick={() => setDone(opt.value)} style={{
-              flex: 1, padding: '12px 8px', borderRadius: 14, border: `2px solid ${done === opt.value ? opt.color : 'transparent'}`,
-              background: done === opt.value ? `${opt.color}18` : '#F5F6FA',
+            <button key={opt.value} onClick={() => setStatus(opt.value)} style={{
+              flex: 1, padding: '12px 8px', borderRadius: 14, border: `2px solid ${status === opt.value ? opt.color : 'transparent'}`,
+              background: status === opt.value ? `${opt.color}18` : '#F5F6FA',
               cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
               transition: 'all 0.2s',
             }}>
-              <span style={{ fontSize: 22 }}>{opt.emoji}</span>
-              <span style={{ fontSize: 12, fontWeight: 600, color: done === opt.value ? opt.color : C.grayMed, fontFamily: 'Plus Jakarta Sans, sans-serif' }}>{opt.label}</span>
+              <span style={{ fontSize: 22, lineHeight: 1, color: opt.color }}>{opt.mark}</span>
+              <span style={{ fontSize: 12, fontWeight: 600, color: status === opt.value ? opt.color : C.grayMed, fontFamily: 'Plus Jakarta Sans, sans-serif' }}>{opt.label}</span>
             </button>
           ))}
         </div>
 
-        {done === true && (
+        {status === 'done' && (
           <>
             {/* Duration */}
             <div style={{ marginBottom: 16 }}>
@@ -170,7 +171,7 @@ export function CheckInModal({
           </div>
         )}
 
-        <PrimaryButton onClick={handleSave} fullWidth disabled={done === null || saving}>
+        <PrimaryButton onClick={handleSave} fullWidth disabled={status === null || saving}>
           {saving ? 'Saqlanmoqda...' : 'Saqlash'}
         </PrimaryButton>
       </div>

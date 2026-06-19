@@ -68,9 +68,9 @@ export function BottomTabBar({
 }) {
   return (
     <div style={{
-      position: 'absolute', bottom: 0, left: 0, right: 0, height: 80,
+      position: 'absolute', bottom: 0, left: 0, right: 0, height: 'calc(72px + env(safe-area-inset-bottom, 0px))',
       background: '#fff', borderTop: `1px solid ${C.border}`,
-      display: 'flex', alignItems: 'flex-start', paddingTop: 8,
+      display: 'flex', alignItems: 'flex-start', paddingTop: 8, paddingBottom: 'env(safe-area-inset-bottom, 0px)',
       boxShadow: '0 -4px 20px rgba(0,0,0,0.06)',
       zIndex: 40,
     }}>

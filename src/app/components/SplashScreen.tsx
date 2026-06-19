@@ -1,4 +1,4 @@
-import { StatusBar, C } from './shared';
+import { C } from './shared';
 
 export function SplashScreen() {
   return (
@@ -7,8 +7,6 @@ export function SplashScreen() {
       background: `linear-gradient(160deg, #2D9162 0%, #3CB878 50%, #5CC896 100%)`,
       display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 0,
     }}>
-      <StatusBar light />
-
       {/* Decorative circles */}
       <div style={{ position: 'absolute', top: -60, right: -60, width: 220, height: 220, borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }} />
       <div style={{ position: 'absolute', bottom: 80, left: -80, width: 280, height: 280, borderRadius: '50%', background: 'rgba(255,255,255,0.06)' }} />

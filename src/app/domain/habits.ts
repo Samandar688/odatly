@@ -1,7 +1,7 @@
 export const DAY_LABELS = ['Du', 'Se', 'Cho', 'Pa', 'Ju', 'Sha', 'Yak'] as const;
 export type DayLabel = (typeof DAY_LABELS)[number];
 
-export type HabitLogStatus = 'done' | 'missed';
+export type HabitLogStatus = 'done' | 'missed' | 'skipped';
 export type HabitTodayStatus = HabitLogStatus | 'pending' | 'not_scheduled';
 
 export interface Habit {
@@ -53,6 +53,7 @@ export interface RangeStats {
   planned: number;
   done: number;
   missed: number;
+  skipped: number;
   pending: number;
   completionRate: number;
   totalDurationMinutes: number;
@@ -189,6 +190,7 @@ export function getRangeStats(
   let planned = 0;
   let done = 0;
   let missed = 0;
+  let skipped = 0;
   let pending = 0;
   let totalDurationMinutes = 0;
 
@@ -203,6 +205,8 @@ export function getRangeStats(
       if (log?.status === 'done') {
         done += 1;
         totalDurationMinutes += log.durationMinutes;
+      } else if (log?.status === 'skipped') {
+        skipped += 1;
       } else if (log?.status === 'missed' || dateKey(cursor) < todayKey) {
         missed += 1;
       } else {
@@ -215,6 +219,7 @@ export function getRangeStats(
     planned,
     done,
     missed,
+    skipped,
     pending,
     completionRate: planned === 0 ? 0 : Math.round((done / planned) * 100),
     totalDurationMinutes,
@@ -263,7 +268,7 @@ export function getLongestStreak(habit: Habit, logs: HabitLog[], asOf = new Date
     if (log?.status === 'done') {
       current += 1;
       longest = Math.max(longest, current);
-    } else if (key !== todayKey || log?.status === 'missed') {
+    } else if (key !== todayKey || log) {
       current = 0;
     }
   }
@@ -356,9 +361,11 @@ export function getCalendarDayStatus(habits: Habit[], logs: HabitLog[], date: Da
 
   const doneCount = planned.filter((habit) => getLogForDate(logs, habit.id, key)?.status === 'done').length;
   const missedCount = planned.filter((habit) => getLogForDate(logs, habit.id, key)?.status === 'missed').length;
+  const skippedCount = planned.filter((habit) => getLogForDate(logs, habit.id, key)?.status === 'skipped').length;
 
   if (doneCount === planned.length) return 'done';
   if (doneCount > 0) return 'partial';
+  if (skippedCount > 0) return 'partial';
   if (missedCount > 0 || key < dateKey(today)) return 'missed';
   return 'none';
 }

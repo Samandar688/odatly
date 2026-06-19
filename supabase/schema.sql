@@ -30,7 +30,7 @@ create table if not exists public.habit_logs (
   user_id uuid not null references auth.users(id) on delete cascade,
   habit_id uuid not null references public.habits(id) on delete cascade,
   log_date date not null,
-  status text not null check (status in ('done', 'missed')),
+  status text not null check (status in ('done', 'missed', 'skipped')),
   duration_minutes integer not null default 0 check (duration_minutes >= 0),
   note text not null default '',
   mood text not null default '',
@@ -38,6 +38,13 @@ create table if not exists public.habit_logs (
   updated_at timestamptz not null default now(),
   unique (habit_id, log_date)
 );
+
+alter table public.habit_logs
+  drop constraint if exists habit_logs_status_check;
+
+alter table public.habit_logs
+  add constraint habit_logs_status_check
+  check (status in ('done', 'missed', 'skipped'));
 
 create table if not exists public.reminders (
   id uuid primary key default gen_random_uuid(),
