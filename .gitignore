@@ -1,8 +1,25 @@
+# dependencies
 node_modules/
+native/node_modules/
+
+# Expo / React Native generated output
+.expo/
+native/.expo/
 dist/
+native/dist/
+web-build/
+expo-env.d.ts
+native/expo-env.d.ts
+
+# native generated folders
+android/
+ios/
+native/android/
+native/ios/
+
+# local files
 .env
 .env.*
-!.env.example
 *.log
 *.apk
 *.aab
@@ -10,9 +27,11 @@ dist/
 *.docx
 *.jks
 *.keystore
-Rasmlar/
-android/local.properties
-android/.gradle/
-android/build/
-android/app/build/
-android/app/src/main/assets/public/
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.tsbuildinfo
+
+# OS/editor
+.DS_Store

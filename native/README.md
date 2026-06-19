@@ -1,6 +1,6 @@
 # Odatly Native
 
-React Native + Expo varianti. Eski Capacitor loyiha hozircha rootda reference sifatida qoladi.
+React Native + Expo varianti. Rootdagi eski Vite/Capacitor mockup olib tashlangan; asosiy ish shu papkada davom etadi.
 
 ## Development build
 
@@ -28,4 +28,4 @@ Telefon va kompyuter bir Wi-Fi tarmog'ida bo'lsa, o'rnatilgan development build 
 
 ## Hozirgi auth qarori
 
-Kirish hozircha faqat ism bilan ishlaydi. Parol, demo data va begona seed ma'lumotlar yo'q. Data telefonda lokal saqlanadi; backend/Supabase keyingi bosqichda ulanadi.
+Kirish hozircha faqat ism bilan ishlaydi. Parol va begona seed ma'lumotlar yo'q. Data telefonda lokal saqlanadi; backend/Supabase keyingi bosqichda ulanadi.
