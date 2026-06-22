@@ -20,6 +20,7 @@ export interface Habit {
   color: string;
   active: boolean;
   createdAt: string;
+  notificationIds?: string[];
 }
 
 export interface HabitLog {

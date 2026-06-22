@@ -67,26 +67,8 @@ export function TodayScreen({
   onOpenDetail: (habit: Habit) => void;
 }) {
   const firstName = profile.fullName.split(' ')[0];
-  const streak = currentStreak(habits, logs);
-  const weekly = currentWeekDays();
-  const weeklySummary = weekly.reduce(
-    (acc, date) => {
-      const summary = daySummary(habits, logs, date);
-      acc.planned += summary.planned.length;
-      acc.done += summary.done;
-      return acc;
-    },
-    { planned: 0, done: 0 },
-  );
-  const weeklyPct = weeklySummary.planned === 0 ? 0 : Math.round((weeklySummary.done / weeklySummary.planned) * 100);
   const [motivationIndex, setMotivationIndex] = useState(0);
   const motivation = MOTIVATION_SLIDES[motivationIndex];
-  const remaining = Math.max(stats.planned.length - stats.done - stats.skipped - stats.missed, 0);
-  const heroFocusText = stats.planned.length === 0
-    ? "Bugun reja yo'q. Yangi odat qo'shing."
-    : remaining === 0
-      ? 'Bugungi reja yopildi. Ritmni saqlaymiz.'
-      : `Bugun: ${remaining} ta odat navbatda.`;
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -105,72 +87,44 @@ export function TodayScreen({
   };
 
   return (
-    <>
-      <View style={styles.hero}>
-        <View style={styles.heroTopRow}>
-          <View style={styles.flex}>
-            <Text style={styles.heroOverline}>Bugun, {displayDate(new Date())}</Text>
-            <Text style={styles.heroTitle}>Salom, {firstName}</Text>
-            <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.82} style={styles.heroText}>{heroFocusText}</Text>
-          </View>
-          <View style={styles.heroScore}>
-            <Text style={styles.heroScoreValue}>{stats.pct}%</Text>
-            <Text style={styles.heroScoreLabel}>bugun</Text>
-          </View>
-        </View>
+    <View style={{ gap: 16 }}>
+      <View style={{ paddingHorizontal: 4, marginTop: 8, marginBottom: 8 }}>
+        <Text style={{ color: '#7B8088', fontSize: 14, fontWeight: '600' }}>Bugun, {displayDate(new Date())}</Text>
+        <Text style={{ color: '#1C2035', fontSize: 26, fontWeight: '900', marginTop: 4 }}>Salom, {firstName}</Text>
+      </View>
 
-        <View style={styles.heroProgressTrack}>
-          <View style={[styles.heroProgressFill, { width: `${stats.pct}%` }]} />
+      <View style={[styles.motivationCard, { backgroundColor: '#107584', borderRadius: 24, padding: 20 }]}>
+        <View style={styles.motivationHeader}>
+          <Text style={[styles.motivationTag, { color: '#fff' }]}>{motivation.tag}</Text>
+          <Text style={[styles.motivationCount, { color: '#fff' }]}>{motivationIndex + 1}/{MOTIVATION_SLIDES.length}</Text>
         </View>
-
-        <View style={styles.motivationCard}>
-          <View style={styles.motivationHeader}>
-            <Text style={styles.motivationTag}>{motivation.tag}</Text>
-            <Text style={styles.motivationCount}>{motivationIndex + 1}/{MOTIVATION_SLIDES.length}</Text>
+        <Text style={[styles.motivationTitle, { color: '#fff' }]}>{motivation.title}</Text>
+        <Text style={[styles.motivationText, { color: 'rgba(255,255,255,0.8)' }]}>{motivation.text}</Text>
+        <View style={styles.motivationControls}>
+          <Pressable onPress={showPreviousMotivation} style={[styles.motivationNavButton, { borderColor: 'rgba(255,255,255,0.2)' }]}>
+            <Text style={[styles.motivationNavText, { color: '#fff' }]}>{'<'}</Text>
+          </Pressable>
+          <View style={styles.motivationDots}>
+            {MOTIVATION_SLIDES.map((item, index) => (
+              <Pressable
+                key={item.tag}
+                onPress={() => setMotivationIndex(index)}
+                style={[styles.motivationDot, motivationIndex === index && { backgroundColor: '#fff', width: 20 }, { backgroundColor: 'rgba(255,255,255,0.4)' }]}
+              />
+            ))}
           </View>
-          <Text style={styles.motivationTitle}>{motivation.title}</Text>
-          <Text style={styles.motivationText}>{motivation.text}</Text>
-          <View style={styles.motivationControls}>
-            <Pressable onPress={showPreviousMotivation} style={styles.motivationNavButton}>
-              <Text style={styles.motivationNavText}>{'<'}</Text>
-            </Pressable>
-            <View style={styles.motivationDots}>
-              {MOTIVATION_SLIDES.map((item, index) => (
-                <Pressable
-                  key={item.tag}
-                  onPress={() => setMotivationIndex(index)}
-                  style={[styles.motivationDot, motivationIndex === index && styles.motivationDotActive]}
-                />
-              ))}
-            </View>
-            <Pressable onPress={showNextMotivation} style={styles.motivationNavButton}>
-              <Text style={styles.motivationNavText}>{'>'}</Text>
-            </Pressable>
-          </View>
-        </View>
-
-        <View style={styles.heroMetaRow}>
-          <View style={styles.heroMetaPill}>
-            <Text style={styles.heroMetaValue}>{stats.done}/{stats.planned.length}</Text>
-            <Text style={styles.heroMetaLabel}>bajarildi</Text>
-          </View>
-          <View style={styles.heroMetaPill}>
-            <Text style={styles.heroMetaValue}>{remaining}</Text>
-            <Text style={styles.heroMetaLabel}>navbatda</Text>
-          </View>
-          <View style={styles.heroMetaPill}>
-            <Text style={styles.heroMetaValue}>{streak}</Text>
-            <Text style={styles.heroMetaLabel}>streak</Text>
-          </View>
+          <Pressable onPress={showNextMotivation} style={[styles.motivationNavButton, { borderColor: 'rgba(255,255,255,0.2)' }]}>
+            <Text style={[styles.motivationNavText, { color: '#fff' }]}>{'>'}</Text>
+          </Pressable>
         </View>
       </View>
 
       <View style={styles.todaySummaryCard}>
         <View style={styles.todaySummaryTop}>
           <View style={styles.flex}>
-            <Text style={styles.sectionTitle}>Bugungi progress</Text>
+            <Text style={styles.sectionTitle}>Bugungi holat</Text>
             <Text style={styles.muted}>
-              {stats.planned.length === 0 ? "Bugun odat yo'q" : `${stats.done}/${stats.planned.length} odat bajarildi`}
+              {stats.planned.length === 0 ? "Bugun odat yo'q" : `${stats.done} ta bajarildi, ${stats.planned.length} ta reja`}
             </Text>
           </View>
           <View style={styles.compactPercent}>
@@ -180,56 +134,10 @@ export function TodayScreen({
         <View style={styles.progressTrack}>
           <View style={[styles.progressFill, { width: `${stats.pct}%` }]} />
         </View>
-        <View style={styles.compactMetricRow}>
-          <MiniMetric label="Kutilmoqda" value={String(stats.pending)} tone="neutral" />
-          <MiniMetric label="Skip" value={String(stats.skipped)} tone="warn" />
-          <MiniMetric label="Bajarilmadi" value={String(stats.missed)} tone="danger" />
-        </View>
-      </View>
-
-      <View style={styles.todayWeekCard}>
-        <View style={styles.weekHeader}>
-          <View>
-            <Text style={styles.sectionTitle}>Haftalik ritm</Text>
-            <Text style={styles.muted}>Dushanbadan yakshanbagacha</Text>
-          </View>
-          <View style={styles.weekSummaryPill}>
-            <Text style={styles.weekSummaryText}>{weeklySummary.done}/{weeklySummary.planned}</Text>
-          </View>
-        </View>
-        <View style={styles.weekProgressTrack}>
-          <View style={[styles.weekProgressFill, { width: `${weeklyPct}%` }]} />
-        </View>
-        <View style={styles.todayWeekRow}>
-          {weekly.map((date) => {
-            const summary = daySummary(habits, logs, date);
-            const key = dateKey(date);
-            const isToday = key === todayKey();
-            const pct = summary.planned.length === 0 ? 0 : Math.round((summary.done / summary.planned.length) * 100);
-            const barHeight = summary.planned.length === 0 ? 0 : Math.max(pct, 10);
-
-            return (
-              <View key={key} style={[styles.weekDay, isToday && styles.weekDayToday]}>
-                <Text style={[styles.weekDayText, isToday && styles.weekDayTextToday]}>{dayForDate(date)}</Text>
-                <View style={[styles.todayWeekBarTrack, isToday && styles.todayWeekBarTrackToday]}>
-                  <View style={[styles.weekBarFill, rhythmFillStyle(summary.tone), { height: `${barHeight}%` }]} />
-                </View>
-                <Text style={[styles.weekDayCount, isToday && styles.weekDayCountToday]}>
-                  {summary.planned.length ? `${summary.done}/${summary.planned.length}` : '-'}
-                </Text>
-              </View>
-            );
-          })}
-        </View>
-        <View style={styles.weekLegendRow}>
-          <HistoryLegend label="Bajarildi" tone="done" />
-          <HistoryLegend label="Qisman" tone="skipped" />
-          <HistoryLegend label="Reja yo'q" tone="off" />
-        </View>
       </View>
 
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Bugungi odatlar</Text>
+        <Text style={styles.sectionTitle}>Odatlarning progressi</Text>
       </View>
 
       {stats.planned.length === 0 ? (
@@ -241,18 +149,24 @@ export function TodayScreen({
         />
       ) : (
         <View style={styles.todayTasksList}>
-          {stats.planned.map((habit) => (
-            <HabitCard
-              key={habit.id}
-              habit={habit}
-              log={logForToday(logs, habit.id)}
-              onCheckIn={onCheckIn}
-              onOpenDetail={onOpenDetail}
-            />
-          ))}
+          {stats.planned.map((habit) => {
+            const completion = habitCompletion(habit, logs);
+            return (
+              <View key={habit.id} style={styles.habitTaskCard}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Text style={styles.habitName}>{habit.name}</Text>
+                  <Text style={styles.habitPercent}>{completion.pct}%</Text>
+                </View>
+                <Text style={styles.muted}>{completion.done}/{completion.planned} marotaba bajarilgan</Text>
+                <View style={[styles.progressTrack, { marginTop: 8 }]}>
+                  <View style={[styles.progressFill, { width: `${completion.pct}%`, backgroundColor: habit.color }]} />
+                </View>
+              </View>
+            );
+          })}
         </View>
       )}
-    </>
+    </View>
   );
 }
 

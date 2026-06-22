@@ -35,6 +35,8 @@ import {
   TodayScreen,
 } from './src/screens';
 import { styles } from './src/styles';
+import { requestPermissionsAsync, scheduleHabitNotifications, cancelHabitNotifications } from './src/notifications';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 function AppInner() {
   const insets = useSafeAreaInsets();
@@ -56,12 +58,14 @@ function AppInner() {
   const [habitName, setHabitName] = useState('');
   const [habitTarget, setHabitTarget] = useState('30 daqiqa');
   const [habitTime, setHabitTime] = useState('07:00');
+  const [showTimePicker, setShowTimePicker] = useState(false);
   const [habitCategory, setHabitCategory] = useState("Sog'liq");
   const [habitColor, setHabitColor] = useState(HABIT_COLORS[0]);
   const [habitDays, setHabitDays] = useState<Day[]>(['Du', 'Se', 'Cho', 'Pa', 'Ju']);
 
   useEffect(() => {
     const load = async () => {
+      await requestPermissionsAsync();
       const rawProfile = await AsyncStorage.getItem(PROFILE_KEY);
       if (rawProfile) {
         const parsedProfile = JSON.parse(rawProfile) as Profile;
@@ -159,22 +163,31 @@ function AppInner() {
     setScreen('detail');
   };
 
-  const saveHabit = () => {
+  const saveHabit = async () => {
     const trimmedName = habitName.trim();
     if (!trimmedName || habitDays.length === 0) return;
 
     if (screen === 'edit' && editingHabitId) {
+      const oldHabit = habits.find((h) => h.id === editingHabitId);
+      if (oldHabit?.notificationIds) {
+        await cancelHabitNotifications(oldHabit.notificationIds);
+      }
+      
+      const draftHabit: Habit = {
+        ...oldHabit!,
+        name: trimmedName,
+        target: habitTarget.trim() || '1 marta',
+        category: habitCategory,
+        reminderTime: habitTime.trim(),
+        days: habitDays,
+        color: habitColor,
+      };
+      
+      const newNotificationIds = draftHabit.active ? await scheduleHabitNotifications(draftHabit) : [];
+
       setHabits((current) => current.map((habit) => (
         habit.id === editingHabitId
-          ? {
-            ...habit,
-            name: trimmedName,
-            target: habitTarget.trim() || '1 marta',
-            category: habitCategory,
-            reminderTime: habitTime.trim(),
-            days: habitDays,
-            color: habitColor,
-          }
+          ? { ...draftHabit, notificationIds: newNotificationIds }
           : habit
       )));
       resetHabitForm();
@@ -183,7 +196,7 @@ function AppInner() {
       return;
     }
 
-    const nextHabit: Habit = {
+    const draftHabit: Habit = {
       id: makeId('habit'),
       name: trimmedName,
       target: habitTarget.trim() || '1 marta',
@@ -194,6 +207,8 @@ function AppInner() {
       active: true,
       createdAt: new Date().toISOString(),
     };
+    const newNotificationIds = await scheduleHabitNotifications(draftHabit);
+    const nextHabit = { ...draftHabit, notificationIds: newNotificationIds };
 
     setHabits((current) => [nextHabit, ...current]);
     resetHabitForm();
@@ -210,7 +225,11 @@ function AppInner() {
         {
           text: "O'chirish",
           style: 'destructive',
-          onPress: () => {
+          onPress: async () => {
+            const habit = habits.find(h => h.id === habitId);
+            if (habit?.notificationIds) {
+              await cancelHabitNotifications(habit.notificationIds);
+            }
             setHabits((current) => current.filter((habit) => habit.id !== habitId));
             setLogs((current) => current.filter((log) => log.habitId !== habitId));
             resetHabitForm();
@@ -279,9 +298,23 @@ function AppInner() {
     closeCheckIn();
   };
 
-  const toggleActive = (habitId: string) => {
-    setHabits((current) => current.map((habit) => (
-      habit.id === habitId ? { ...habit, active: !habit.active } : habit
+  const toggleActive = async (habitId: string) => {
+    const habit = habits.find((h) => h.id === habitId);
+    if (!habit) return;
+    
+    let newNotificationIds = habit.notificationIds;
+    
+    if (habit.active) {
+      if (habit.notificationIds) {
+        await cancelHabitNotifications(habit.notificationIds);
+      }
+      newNotificationIds = [];
+    } else {
+      newNotificationIds = await scheduleHabitNotifications({ ...habit, active: true });
+    }
+
+    setHabits((current) => current.map((h) => (
+      h.id === habitId ? { ...h, active: !h.active, notificationIds: newNotificationIds } : h
     )));
   };
 
@@ -438,14 +471,33 @@ function AppInner() {
               ))}
             </View>
             <Text style={styles.label}>Eslatma vaqti</Text>
-            <TextInput
-              value={habitTime}
-              onChangeText={setHabitTime}
-              placeholder="07:00"
-              placeholderTextColor="#9AA1A9"
-              style={styles.input}
-              keyboardType="numbers-and-punctuation"
-            />
+            <Pressable onPress={() => setShowTimePicker(true)} style={[styles.input, { justifyContent: 'center' }]}>
+              <Text style={{ color: habitTime ? C.ink : '#9AA1A9', fontSize: 15 }}>{habitTime || "07:00"}</Text>
+            </Pressable>
+            {showTimePicker && (
+              <DateTimePicker
+                value={(() => {
+                  const [h, m] = (habitTime || "07:00").split(':');
+                  const d = new Date();
+                  d.setHours(Number(h) || 7, Number(m) || 0, 0, 0);
+                  return d;
+                })()}
+                mode="time"
+                is24Hour={true}
+                display="spinner"
+                onChange={(event, date) => {
+                  setShowTimePicker(Platform.OS === 'ios');
+                  if (event.type === 'set' && date) {
+                    const h = date.getHours().toString().padStart(2, '0');
+                    const m = date.getMinutes().toString().padStart(2, '0');
+                    setHabitTime(`${h}:${m}`);
+                    if (Platform.OS === 'android') setShowTimePicker(false);
+                  } else if (event.type === 'dismissed') {
+                    setShowTimePicker(false);
+                  }
+                }}
+              />
+            )}
           </View>
 
           <View style={styles.formCard}>
