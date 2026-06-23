@@ -1,4 +1,5 @@
 import { Pressable, Text, View } from 'react-native';
+import Svg, { Circle, G } from 'react-native-svg';
 
 import type { HistoryTone, LogStatus } from './types';
 import { styles } from './styles';
@@ -227,4 +228,65 @@ export function historyToneStyle(tone: HistoryTone) {
   if (tone === 'skipped') return styles.historySkipped;
   if (tone === 'pending') return styles.historyPending;
   return styles.historyOff;
+}
+
+export function CircularHabitsChart({ 
+  data, 
+  size = 120, 
+  strokeWidth = 12 
+}: { 
+  data: { id: string; name: string; color: string; pct: number }[]; 
+  size?: number; 
+  strokeWidth?: number; 
+}) {
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const numHabits = data.length || 1;
+  const gapAngle = numHabits > 1 ? 6 : 0;
+  const segmentAngle = 360 / numHabits;
+  const drawAngle = segmentAngle - gapAngle;
+  
+  const drawLength = (drawAngle / 360) * circumference;
+  
+  return (
+    <View style={{ width: size, height: size }}>
+      <Svg width={size} height={size}>
+        <G rotation="-90" origin={`${size / 2}, ${size / 2}`}>
+          {data.map((item, index) => {
+            const rotation = index * segmentAngle;
+            const fillLength = (drawLength * item.pct) / 100;
+            
+            return (
+              <G key={item.id} rotation={rotation} origin={`${size / 2}, ${size / 2}`}>
+                {/* Background track */}
+                <Circle
+                  cx={size / 2}
+                  cy={size / 2}
+                  r={radius}
+                  stroke={`${item.color}33`} // ~20% opacity for background
+                  strokeWidth={strokeWidth}
+                  fill="none"
+                  strokeDasharray={`${drawLength} ${circumference}`}
+                  strokeLinecap="round"
+                />
+                {/* Foreground filled track */}
+                {fillLength > 0 && (
+                  <Circle
+                    cx={size / 2}
+                    cy={size / 2}
+                    r={radius}
+                    stroke={item.color}
+                    strokeWidth={strokeWidth}
+                    fill="none"
+                    strokeDasharray={`${fillLength} ${circumference}`}
+                    strokeLinecap="round"
+                  />
+                )}
+              </G>
+            );
+          })}
+        </G>
+      </Svg>
+    </View>
+  );
 }

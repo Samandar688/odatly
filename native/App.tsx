@@ -106,7 +106,6 @@ function AppInner() {
   const bottomSafe = Math.max(insets.bottom, Platform.OS === 'android' ? 28 : 16);
   const tabBarBottom = bottomSafe + 6;
   const tabContentBottom = tabBarBottom + 82;
-  const fabBottom = tabBarBottom + 82;
 
   const enterApp = async () => {
     const fullName = nameInput.trim();
@@ -650,22 +649,9 @@ function AppInner() {
         {screen === 'main' && tab === 'profile' && <ProfileScreen profile={profile} habits={habits} logs={logs} onSignOut={signOut} />}
       </ScrollView>
 
-      {screen === 'main' && tab !== 'profile' && (
-        <Pressable
-          onPress={openAddHabit}
-          style={({ pressed }) => [
-            styles.fab,
-            { bottom: fabBottom },
-            pressed && styles.pressed,
-          ]}
-        >
-          <Text style={styles.fabText}>+</Text>
-        </Pressable>
-      )}
-
       {screen === 'main' && (
         <View style={[styles.tabBar, { bottom: tabBarBottom }]}>
-          <TabButton label="Bugun" active={tab === 'today'} onPress={() => setTab('today')} />
+          <TabButton label="Asosiy" active={tab === 'today'} onPress={() => setTab('today')} />
           <TabButton label="Odatlar" active={tab === 'habits'} onPress={() => setTab('habits')} />
           <TabButton label="Kalendar" active={tab === 'calendar'} onPress={() => setTab('calendar')} />
           <TabButton label="Stat" active={tab === 'stats'} onPress={() => setTab('stats')} />

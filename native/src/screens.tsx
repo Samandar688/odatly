@@ -29,6 +29,7 @@ import {
 } from './utils';
 import {
   BreakdownRow,
+  CircularHabitsChart,
   EmptyState,
   FilterChip,
   HistoryLegend,
@@ -66,7 +67,6 @@ export function TodayScreen({
   onCheckIn: (habitId: string, status: LogStatus) => void;
   onOpenDetail: (habit: Habit) => void;
 }) {
-  const firstName = profile.fullName.split(' ')[0];
   const [motivationIndex, setMotivationIndex] = useState(0);
   const motivation = MOTIVATION_SLIDES[motivationIndex];
 
@@ -88,11 +88,6 @@ export function TodayScreen({
 
   return (
     <View style={{ gap: 16 }}>
-      <View style={{ paddingHorizontal: 4, marginTop: 8, marginBottom: 8 }}>
-        <Text style={{ color: '#7B8088', fontSize: 14, fontWeight: '600' }}>Bugun, {displayDate(new Date())}</Text>
-        <Text style={{ color: '#1C2035', fontSize: 26, fontWeight: '900', marginTop: 4 }}>Salom, {firstName}</Text>
-      </View>
-
       <View style={[styles.motivationCard, { backgroundColor: '#107584', borderRadius: 24, padding: 20 }]}>
         <View style={styles.motivationHeader}>
           <Text style={[styles.motivationTag, { color: '#fff' }]}>{motivation.tag}</Text>
@@ -119,20 +114,41 @@ export function TodayScreen({
         </View>
       </View>
 
-      <View style={styles.todaySummaryCard}>
-        <View style={styles.todaySummaryTop}>
-          <View style={styles.flex}>
-            <Text style={styles.sectionTitle}>Bugungi holat</Text>
-            <Text style={styles.muted}>
-              {stats.planned.length === 0 ? "Bugun odat yo'q" : `${stats.done} ta bajarildi, ${stats.planned.length} ta reja`}
-            </Text>
-          </View>
-          <View style={styles.compactPercent}>
-            <Text style={styles.compactPercentText}>{stats.pct}%</Text>
-          </View>
+      <View style={[styles.todaySummaryCard, { flexDirection: 'row', alignItems: 'center' }]}>
+        <View style={{ flex: 1, gap: 12 }}>
+          <Text style={styles.sectionTitle}>Bugungi holat</Text>
+          {stats.planned.length === 0 ? (
+            <Text style={styles.muted}>Bugun reja yo'q</Text>
+          ) : (
+            <View style={{ gap: 8 }}>
+              {stats.planned.map(habit => {
+                const completion = habitCompletion(habit, logs);
+                return (
+                  <View key={habit.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: habit.color }} />
+                    <Text numberOfLines={1} style={{ flex: 1, color: '#1C2035', fontSize: 14, fontWeight: '600' }}>{habit.name}</Text>
+                    <Text style={{ color: '#7B8088', fontSize: 13, fontWeight: '500' }}>{completion.pct}%</Text>
+                  </View>
+                );
+              })}
+            </View>
+          )}
         </View>
-        <View style={styles.progressTrack}>
-          <View style={[styles.progressFill, { width: `${stats.pct}%` }]} />
+        <View style={{ width: 120, height: 120, marginLeft: 16 }}>
+          {stats.planned.length > 0 ? (
+            <CircularHabitsChart 
+               data={stats.planned.map(h => ({
+                  id: h.id, 
+                  name: h.name, 
+                  color: h.color, 
+                  pct: habitCompletion(h, logs).pct 
+               }))} 
+               size={120} 
+               strokeWidth={14} 
+            />
+          ) : (
+            <View style={{ flex: 1, borderRadius: 60, borderWidth: 14, borderColor: '#F0F2F5' }} />
+          )}
         </View>
       </View>
 
