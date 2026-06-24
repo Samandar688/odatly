@@ -1,4 +1,4 @@
-﻿import { StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 
 import { C } from './constants';
 
@@ -1033,8 +1033,7 @@ export const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: C.border,
     flexDirection: 'row',
-    paddingTop: 8,
-    paddingHorizontal: 8,
+    padding: 8,
     shadowColor: '#000',
     shadowOpacity: 0.1,
     shadowRadius: 20,
@@ -1865,6 +1864,165 @@ export const styles = StyleSheet.create({
     color: C.primaryDark,
     fontSize: 13,
     lineHeight: 19,
+  },
+  // ── Redesigned Habits Page ──
+  habitsHeroChart: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  habitsHeroInfo: {
+    flex: 1,
+    gap: 6,
+  },
+  habitsOverallPct: {
+    color: C.ink,
+    fontSize: 28,
+    fontWeight: '900',
+  },
+  habitsOverallLabel: {
+    color: C.muted,
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  habitsQuickStats: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 4,
+  },
+  habitsQuickStat: {
+    backgroundColor: C.bgSoft,
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    alignItems: 'center',
+    gap: 2,
+  },
+  habitsQuickStatValue: {
+    color: C.ink,
+    fontSize: 15,
+    fontWeight: '900',
+  },
+  habitsQuickStatLabel: {
+    color: C.muted,
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  categoryFilterScroll: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  categoryChip: {
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    backgroundColor: C.card,
+    borderWidth: 1,
+    borderColor: C.border,
+  },
+  categoryChipActive: {
+    backgroundColor: C.primary,
+    borderColor: C.primary,
+  },
+  categoryChipText: {
+    color: C.muted,
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  categoryChipTextActive: {
+    color: '#fff',
+  },
+  compactCard: {
+    backgroundColor: C.card,
+    borderRadius: 20,
+    padding: 14,
+    paddingLeft: 16,
+    gap: 10,
+    borderWidth: 1,
+    borderColor: C.border,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 5 },
+    elevation: 2,
+  },
+  compactCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  compactCardIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  compactCardIconText: {
+    fontSize: 18,
+    fontWeight: '800',
+  },
+  compactCardTitle: {
+    color: C.ink,
+    fontSize: 15,
+    fontWeight: '800',
+    flex: 1,
+  },
+  compactCardPct: {
+    color: C.ink,
+    fontSize: 16,
+    fontWeight: '900',
+    minWidth: 38,
+    textAlign: 'right',
+  },
+  compactCardChevron: {
+    color: C.faint,
+    fontSize: 18,
+    fontWeight: '800',
+    marginLeft: 2,
+  },
+  compactCardMeta: {
+    color: C.muted,
+    fontSize: 12,
+    fontWeight: '700',
+    marginLeft: 52,
+  },
+  compactCardProgress: {
+    height: 6,
+    backgroundColor: '#EEF0EE',
+    borderRadius: 6,
+    overflow: 'hidden',
+    marginLeft: 52,
+  },
+  compactCardProgressFill: {
+    height: '100%',
+    borderRadius: 6,
+  },
+  compactCardFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginLeft: 52,
+  },
+  streakBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: C.orangeLight,
+    borderRadius: 999,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+  },
+  streakBadgeText: {
+    color: C.orange,
+    fontSize: 11,
+    fontWeight: '800',
+  },
+  habitsCountText: {
+    color: C.muted,
+    fontSize: 13,
+    fontWeight: '700',
   },
 });
 

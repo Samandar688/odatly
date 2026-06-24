@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { useEffect, useState, useMemo } from 'react';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { DAYS, MONTHS, MOTIVATION_SLIDES } from './constants';
 import type { Habit, HabitLog, LogStatus, Profile } from './types';
@@ -29,7 +29,9 @@ import {
 } from './utils';
 import {
   BreakdownRow,
+  CategoryChip,
   CircularHabitsChart,
+  CompactHabitCard,
   EmptyState,
   FilterChip,
   HistoryLegend,
@@ -58,6 +60,7 @@ export function TodayScreen({
   onAdd,
   onCheckIn,
   onOpenDetail,
+  onToggleToday,
 }: {
   profile: Profile;
   habits: Habit[];
@@ -66,6 +69,7 @@ export function TodayScreen({
   onAdd: () => void;
   onCheckIn: (habitId: string, status: LogStatus) => void;
   onOpenDetail: (habit: Habit) => void;
+  onToggleToday: (habitId: string) => void;
 }) {
   const [motivationIndex, setMotivationIndex] = useState(0);
   const motivation = MOTIVATION_SLIDES[motivationIndex];
@@ -114,46 +118,10 @@ export function TodayScreen({
         </View>
       </View>
 
-      <View style={[styles.todaySummaryCard, { flexDirection: 'row', alignItems: 'center' }]}>
-        <View style={{ flex: 1, gap: 12 }}>
-          <Text style={styles.sectionTitle}>Bugungi holat</Text>
-          {stats.planned.length === 0 ? (
-            <Text style={styles.muted}>Bugun reja yo'q</Text>
-          ) : (
-            <View style={{ gap: 8 }}>
-              {stats.planned.map(habit => {
-                const completion = habitCompletion(habit, logs);
-                return (
-                  <View key={habit.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                    <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: habit.color }} />
-                    <Text numberOfLines={1} style={{ flex: 1, color: '#1C2035', fontSize: 14, fontWeight: '600' }}>{habit.name}</Text>
-                    <Text style={{ color: '#7B8088', fontSize: 13, fontWeight: '500' }}>{completion.pct}%</Text>
-                  </View>
-                );
-              })}
-            </View>
-          )}
-        </View>
-        <View style={{ width: 120, height: 120, marginLeft: 16 }}>
-          {stats.planned.length > 0 ? (
-            <CircularHabitsChart 
-               data={stats.planned.map(h => ({
-                  id: h.id, 
-                  name: h.name, 
-                  color: h.color, 
-                  pct: habitCompletion(h, logs).pct 
-               }))} 
-               size={120} 
-               strokeWidth={14} 
-            />
-          ) : (
-            <View style={{ flex: 1, borderRadius: 60, borderWidth: 14, borderColor: '#F0F2F5' }} />
-          )}
-        </View>
-      </View>
+
 
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Odatlarning progressi</Text>
+        <Text style={styles.sectionTitle}>Bugungi odatlar</Text>
       </View>
 
       {stats.planned.length === 0 ? (
@@ -164,19 +132,45 @@ export function TodayScreen({
           onPress={onAdd}
         />
       ) : (
-        <View style={styles.todayTasksList}>
+        <View style={{ gap: 12 }}>
           {stats.planned.map((habit) => {
-            const completion = habitCompletion(habit, logs);
+            const todayLog = logForToday(logs, habit.id);
+            const isDone = todayLog?.status === 'done';
+            
             return (
-              <View key={habit.id} style={styles.habitTaskCard}>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Text style={styles.habitName}>{habit.name}</Text>
-                  <Text style={styles.habitPercent}>{completion.pct}%</Text>
-                </View>
-                <Text style={styles.muted}>{completion.done}/{completion.planned} marotaba bajarilgan</Text>
-                <View style={[styles.progressTrack, { marginTop: 8 }]}>
-                  <View style={[styles.progressFill, { width: `${completion.pct}%`, backgroundColor: habit.color }]} />
-                </View>
+              <View key={habit.id} style={[styles.habitTaskCard, { flexDirection: 'row', alignItems: 'center', padding: 12, paddingLeft: 16 }]}>
+                <Pressable style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }} onPress={() => onOpenDetail(habit)}>
+                  <View style={[styles.habitIcon, { backgroundColor: `${habit.color}1F`, width: 44, height: 44, borderRadius: 14 }]}>
+                    <Text style={[styles.habitIconText, { color: habit.color, fontSize: 18 }]}>
+                      {habit.name.slice(0, 1).toUpperCase()}
+                    </Text>
+                  </View>
+                  <View style={{ flex: 1, marginLeft: 12 }}>
+                    <Text numberOfLines={1} style={[styles.habitName, isDone && { textDecorationLine: 'line-through', color: '#B8BBC4' }]}>
+                      {habit.name}
+                    </Text>
+                    <Text numberOfLines={1} style={styles.muted}>
+                      {habit.target} • {habit.reminderTime || "eslatma yo'q"}
+                    </Text>
+                  </View>
+                </Pressable>
+                
+                <Pressable 
+                  onPress={() => onToggleToday(habit.id)}
+                  style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: 10,
+                    borderWidth: 2,
+                    borderColor: isDone ? habit.color : '#EEF0EE',
+                    backgroundColor: isDone ? habit.color : 'transparent',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginLeft: 12,
+                  }}
+                >
+                  {isDone && <Text style={{ color: '#fff', fontSize: 16, fontWeight: '900' }}>✓</Text>}
+                </Pressable>
               </View>
             );
           })}
@@ -201,117 +195,29 @@ export function HabitsScreen({
   onOpenDetail: (habit: Habit) => void;
   onToggle: (habitId: string) => void;
 }) {
-  const [filter, setFilter] = useState<'all' | 'today' | 'active' | 'paused'>('all');
-  const activeCount = habits.filter((habit) => habit.active).length;
-  const todayCount = habits.filter(isPlannedToday).length;
-  const pausedCount = habits.length - activeCount;
-  const filteredHabits = habits.filter((habit) => {
-    if (filter === 'today') return isPlannedToday(habit);
-    if (filter === 'active') return habit.active;
-    if (filter === 'paused') return !habit.active;
-    return true;
-  });
-
   return (
     <>
-      <View style={styles.habitsHero}>
-        <View style={styles.habitsHeroTop}>
-          <View>
-            <Text style={styles.pageHeroTitle}>Odatlarim</Text>
-            <Text style={styles.pageHeroText}>{activeCount} ta faol odat, jami {habits.length} ta reja.</Text>
-          </View>
-          <Pressable onPress={onAdd} style={styles.heroAddButton}>
-            <Text style={styles.heroAddText}>+</Text>
-          </Pressable>
-        </View>
-        <View style={styles.habitsSummaryRow}>
-          <MiniMetric label="Bugun" value={String(todayCount)} tone="neutral" />
-          <MiniMetric label="Faol" value={String(activeCount)} tone="neutral" />
-          <MiniMetric label="Pauza" value={String(pausedCount)} tone="warn" />
-        </View>
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>Barcha odatlar</Text>
+        <Text style={styles.habitsCountText}>{habits.length} ta</Text>
       </View>
 
-      <View style={styles.filterRow}>
-        <FilterChip label="Hammasi" active={filter === 'all'} onPress={() => setFilter('all')} />
-        <FilterChip label="Bugun" active={filter === 'today'} onPress={() => setFilter('today')} />
-        <FilterChip label="Faol" active={filter === 'active'} onPress={() => setFilter('active')} />
-        <FilterChip label="Pauza" active={filter === 'paused'} onPress={() => setFilter('paused')} />
-      </View>
-
-      <SectionHeader title="Odatlar ro'yxati" action="Yangi" onPress={onAdd} />
       {habits.length === 0 ? (
-        <EmptyState title="Ro'yxat bo'sh" text="Odat qo'shsangiz, shu yerda ko'rinadi." action="Odat qo'shish" onPress={onAdd} />
-      ) : filteredHabits.length === 0 ? (
-        <EmptyState title="Bu filterda odat yo'q" text="Boshqa filter tanlang yoki yangi odat qo'shing." action="Odat qo'shish" onPress={onAdd} />
+        <EmptyState
+          title="Ro'yxat bo'sh"
+          text="Odat qo'shsangiz, shu yerda ko'rinadi."
+          action="Odat qo'shish"
+          onPress={onAdd}
+        />
       ) : (
-        filteredHabits.map((habit) => {
-          const todayLog = logForToday(logs, habit.id);
-          const completion = habitCompletion(habit, logs);
-          const streak = habitStreak(habit, logs);
-
-          return (
-          <View key={habit.id} style={[styles.habitListCard, !habit.active && styles.inactiveCard]}>
-            <View style={[styles.habitColorRail, { backgroundColor: habit.color }]} />
-            <View style={styles.habitHeader}>
-              <Pressable onPress={() => onOpenDetail(habit)} style={styles.habitMainPress}>
-                <View style={[styles.habitIcon, { backgroundColor: `${habit.color}1F` }]}>
-                  <Text style={[styles.habitIconText, { color: habit.color }]}>{habit.name.slice(0, 1).toUpperCase()}</Text>
-                </View>
-                <View style={styles.flex}>
-                  <View style={styles.habitTitleRow}>
-                    <Text numberOfLines={1} style={styles.habitName}>{habit.name}</Text>
-                    <View style={[styles.statusPill, habit.active ? styles.successSoft : styles.neutralSoft]}>
-                      <Text style={[styles.statusText, habit.active ? styles.successText : styles.mutedText]}>
-                        {habit.active ? 'Faol' : 'Pauza'}
-                      </Text>
-                    </View>
-                  </View>
-                  <Text numberOfLines={1} style={styles.muted}>{habit.category} - {habit.target}</Text>
-                </View>
-              </Pressable>
-            </View>
-
-            <View style={styles.habitProgressRow}>
-              <View style={styles.habitProgressText}>
-                <Text style={styles.habitMetaText}>30 kun: {completion.done}/{completion.planned}</Text>
-                <Text style={styles.habitMetaText}>Streak: {streak} kun</Text>
-              </View>
-              <Text style={styles.habitPercent}>{completion.pct}%</Text>
-            </View>
-            <View style={styles.progressTrack}>
-              <View style={[styles.progressFill, { width: `${completion.pct}%`, backgroundColor: habit.color }]} />
-            </View>
-
-            <View style={styles.habitMetaRow}>
-              <Text numberOfLines={1} style={styles.habitMetaText}>{habit.days.join(', ')}</Text>
-              <Text numberOfLines={1} style={styles.habitMetaText}>{habit.reminderTime || "eslatma yo'q"}</Text>
-            </View>
-
-            <View style={styles.statusLine}>
-              <Text style={styles.muted}>Bugun</Text>
-              <View style={[styles.statusPill, statusStyle(todayLog?.status)]}>
-                <Text style={[styles.statusText, statusTextStyle(todayLog?.status)]}>
-                  {statusLabel(todayLog?.status)}
-                </Text>
-              </View>
-            </View>
-
-            <View style={styles.habitActionRow}>
-              <Pressable onPress={() => onOpenDetail(habit)} style={styles.actionGhostButton}>
-                <Text style={styles.actionGhostText}>Batafsil</Text>
-              </Pressable>
-              <Pressable onPress={() => onEdit(habit)} style={styles.actionGhostButton}>
-                <Text style={styles.actionGhostText}>Tahrir</Text>
-              </Pressable>
-              <Pressable onPress={() => onToggle(habit.id)} style={[styles.actionGhostButton, habit.active ? styles.successSoft : styles.neutralSoft]}>
-                <Text style={[styles.actionGhostText, habit.active ? styles.successText : styles.mutedText]}>
-                  {habit.active ? 'Pauza' : 'Faollashtir'}
-                </Text>
-              </Pressable>
-            </View>
-          </View>
-          );
-        })
+        habits.map((habit) => (
+          <CompactHabitCard
+            key={habit.id}
+            habit={habit}
+            logs={logs}
+            onPress={() => onOpenDetail(habit)}
+          />
+        ))
       )}
     </>
   );
@@ -348,6 +254,44 @@ export function StatsScreen({ habits, logs }: { habits: Habit[]; logs: HabitLog[
           <MiniMetric label="30 kun reja" value={String(month.planned)} tone="neutral" />
           <MiniMetric label="Bajarildi" value={String(month.done)} tone="neutral" />
           <MiniMetric label="Streak" value={String(streak)} tone="warn" />
+        </View>
+      </View>
+
+      <View style={[styles.todaySummaryCard, { flexDirection: 'row', alignItems: 'center' }]}>
+        <View style={{ flex: 1, gap: 12 }}>
+          <Text style={styles.sectionTitle}>Bugungi holat</Text>
+          {stats.planned.length === 0 ? (
+            <Text style={styles.muted}>Bugun reja yo'q</Text>
+          ) : (
+            <View style={{ gap: 8 }}>
+              {stats.planned.map(habit => {
+                const completion = habitCompletion(habit, logs);
+                return (
+                  <View key={habit.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: habit.color }} />
+                    <Text numberOfLines={1} style={{ flex: 1, color: '#1C2035', fontSize: 14, fontWeight: '600' }}>{habit.name}</Text>
+                    <Text style={{ color: '#7B8088', fontSize: 13, fontWeight: '500' }}>{completion.pct}%</Text>
+                  </View>
+                );
+              })}
+            </View>
+          )}
+        </View>
+        <View style={{ width: 120, height: 120, marginLeft: 16 }}>
+          {stats.planned.length > 0 ? (
+            <CircularHabitsChart 
+               data={stats.planned.map(h => ({
+                  id: h.id, 
+                  name: h.name, 
+                  color: h.color, 
+                  pct: habitCompletion(h, logs).pct 
+               }))} 
+               size={120} 
+               strokeWidth={14} 
+            />
+          ) : (
+            <View style={{ flex: 1, borderRadius: 60, borderWidth: 14, borderColor: '#F0F2F5' }} />
+          )}
         </View>
       </View>
 
@@ -652,7 +596,6 @@ export function HabitDetailScreen({
         </Pressable>
         <View style={styles.flex}>
           <Text style={styles.pageTitle}>Odat tafsiloti</Text>
-          <Text style={styles.muted}>Schedule, progress va check-in tarixi.</Text>
         </View>
       </View>
 
@@ -745,12 +688,6 @@ export function HabitDetailScreen({
         </View>
       </View>
 
-      <View style={styles.statsGrid}>
-        <StatCard label="Joriy streak" value={`${streak} kun`} />
-        <StatCard label="30 kun foiz" value={`${completion.pct}%`} />
-        <StatCard label="30 kun reja" value={String(completion.planned)} />
-        <StatCard label="Daqiqa" value={String(totalMinutes)} />
-      </View>
 
       <View style={styles.detailHistoryCard}>
         <View style={styles.weekHeader}>

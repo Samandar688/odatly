@@ -1,7 +1,8 @@
 import { Pressable, Text, View } from 'react-native';
 import Svg, { Circle, G } from 'react-native-svg';
 
-import type { HistoryTone, LogStatus } from './types';
+import type { Habit, HabitLog, HistoryTone, LogStatus } from './types';
+import { habitCompletion, habitStreak, logForToday } from './utils';
 import { styles } from './styles';
 
 export function SectionHeader({ title, action, onPress }: { title: string; action: string; onPress: () => void }) {
@@ -288,5 +289,63 @@ export function CircularHabitsChart({
         </G>
       </Svg>
     </View>
+  );
+}
+
+export function CategoryChip({ label, active, onPress, count }: { label: string; active: boolean; onPress: () => void; count?: number }) {
+  return (
+    <Pressable onPress={onPress} style={[styles.categoryChip, active && styles.categoryChipActive]}>
+      <Text style={[styles.categoryChipText, active && styles.categoryChipTextActive]}>
+        {label}{count !== undefined ? ` (${count})` : ''}
+      </Text>
+    </Pressable>
+  );
+}
+
+export function CompactHabitCard({
+  habit,
+  logs,
+  onPress,
+}: {
+  habit: Habit;
+  logs: HabitLog[];
+  onPress: () => void;
+}) {
+  const completion = habitCompletion(habit, logs);
+  const streak = habitStreak(habit, logs);
+
+  return (
+    <Pressable onPress={onPress} style={[styles.compactCard, !habit.active && styles.inactiveCard, { padding: 12 }]}>
+      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+        <View style={[styles.compactCardIcon, { backgroundColor: `${habit.color}1F`, width: 44, height: 44, borderRadius: 14 }]}>
+          <Text style={[styles.compactCardIconText, { color: habit.color }]}>
+            {habit.name.slice(0, 1).toUpperCase()}
+          </Text>
+        </View>
+
+        <View style={{ flex: 1, marginLeft: 12 }}>
+          <Text numberOfLines={1} style={styles.compactCardTitle}>
+            {habit.name}
+          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
+            <Text numberOfLines={1} style={[styles.compactCardMeta, { marginLeft: 0 }]}>
+              {habit.days.length} kun/hafta • {habit.target}
+            </Text>
+            {streak > 0 && (
+              <Text style={{ fontSize: 11, fontWeight: '800', color: '#FF9500', marginLeft: 8 }}>
+                🔥 {streak}
+              </Text>
+            )}
+          </View>
+        </View>
+
+        <View style={{ alignItems: 'flex-end', marginLeft: 8 }}>
+          <Text style={[styles.compactCardPct, { minWidth: 0, textAlign: 'right' }]}>{completion.pct}%</Text>
+          <View style={[styles.compactCardProgress, { marginLeft: 0, width: 40, height: 4, marginTop: 4 }]}>
+            <View style={[styles.compactCardProgressFill, { width: `${completion.pct}%`, backgroundColor: habit.color }]} />
+          </View>
+        </View>
+      </View>
+    </Pressable>
   );
 }
